@@ -98,13 +98,52 @@ func (h *accountHandler) GivePoint(c echo.Context) error {
 			Data:       err.Error(),
 		})
 	}
+	sender, err := h.AccountService.GetAccountByMatID(req.SenderID)
+	if err != nil {
+		logger.Error("failed to account info by mattermostID", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+
+	receiver, err := h.AccountService.GetAccountByMatID(req.ReceiverID)
+	if err != nil {
+		logger.Error("failed to account info by mattermostID", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+
+	amount := req.Amount
+	if amount < 10 {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    utils.AmountGreatThan10.Error(),
+			Data:       nil,
+		})
+	}
+
+	if sender.BalanceGranted < amount {
+		if sender.BalanceEarned < amount {
+			return c.JSON(http.StatusBadRequest, models.Response{
+				StatusCode: http.StatusBadRequest,
+				Message:    utils.BalanceNotEnough.Error(),
+				Data:       nil,
+			})
+		}
+	}
+
 	trans := &models.Transaction{
 		Action:     "send",
 		Amount:     req.Amount,
-		SenderID:   req.SenderID,
-		ReceiverID: req.ReceiverID,
+		SenderID:   sender.ID,
+		ReceiverID: receiver.ID,
 	}
-	err := h.AccountService.GivePoint(trans)
+	err = h.AccountService.GivePoint(sender, receiver, trans)
 	if err != nil {
 		logger.Error("failed to Give Point", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, utils.Error{Message: err.Error()})
@@ -135,12 +174,65 @@ func (h *accountHandler) RejectPoint(c echo.Context) error {
 			Data:       err.Error(),
 		})
 	}
-	trans := &models.Transaction{
-		Action:     "reject",
-		ID:         req.TransactionID,
-		OperatorID: req.OperatorID,
+	trans, err := h.AccountService.GetTransactionByID(req.TransactionID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    utils.TransactionNotFound.Error(),
+			Data:       nil,
+		})
 	}
-	err := h.AccountService.RejectPoint(trans)
+	if trans.Action != "send" {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    utils.TransactionIsRefunded.Error(),
+			Data:       nil,
+		})
+	}
+	operator, err := h.AccountService.GetAccountByMatID(req.OperatorID)
+	if err != nil {
+		logger.Error("failed to account info by mattermostID", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+	sender, err := h.AccountService.GetAccountByID(trans.SenderID)
+	if err != nil {
+		logger.Error("failed to account info by mattermostID", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+	receiver := operator
+	if trans.ReceiverID != operator.ID {
+		receiver, err = h.AccountService.GetAccountByID(trans.ReceiverID)
+		if err != nil {
+			logger.Error("failed to account info by mattermostID", zap.Error(err))
+			return c.JSON(http.StatusBadRequest, models.Response{
+				StatusCode: http.StatusBadRequest,
+				Message:    err.Error(),
+				Data:       nil,
+			})
+		}
+	}
+	amount := trans.Amount
+	if receiver.BalanceGranted < amount {
+		if receiver.BalanceEarned < amount {
+			return c.JSON(http.StatusBadRequest, models.Response{
+				StatusCode: http.StatusBadRequest,
+				Message:    utils.BalanceNotEnough.Error(),
+				Data:       nil,
+			})
+		}
+	}
+	trans.Action = "reject"
+	trans.OperatorID = operator.ID
+
+	err = h.AccountService.RejectPoint(receiver, sender, trans)
 	if err != nil {
 		logger.Error("failed to Reject Point", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, utils.Error{Message: err.Error()})
@@ -170,12 +262,29 @@ func (h *accountHandler) ExchangeRequest(c echo.Context) error {
 			Data:       err.Error(),
 		})
 	}
+	requester, err := h.AccountService.GetAccountByMatID(req.RequesterID)
+	if err != nil {
+		logger.Error("failed to account info by mattermostID", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+	amount := req.Amount
+	if requester.BalanceEarned < amount {
+		return c.JSON(http.StatusBadRequest, models.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    utils.BalanceNotEnough.Error(),
+			Data:       nil,
+		})
+	}
 	exRequest := &models.ExchangeRequests{
 		Status:      "request",
-		Amount:      req.Amount,
-		RequesterID: req.RequesterID,
+		Amount:      amount,
+		RequesterID: requester.ID,
 	}
-	err := h.AccountService.ExchangePointRequest(exRequest)
+	err = h.AccountService.ExchangePointRequest(requester, exRequest)
 	if err != nil {
 		logger.Error("failed to Exchange Request", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, utils.Error{Message: err.Error()})

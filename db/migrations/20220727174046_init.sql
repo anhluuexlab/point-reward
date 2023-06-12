@@ -1,33 +1,4 @@
 -- +migrate Up
--- CREATE table authors (
---     id SERIAL,
---     name text,
---     country text,
---     CONSTRAINT author_pk PRIMARY KEY(id)
--- );
-
--- CREATE TABLE books (
---     id SERIAL,
---     name text,
---     author_id int,
---     CONSTRAINT book_pk PRIMARY KEY(id),
---     CONSTRAINT book_to_author FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
--- );
-
--- CREATE TABLE `authors` (
---   `id` int NOT NULL AUTO_INCREMENT,
---   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
---   `country` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
---   PRIMARY KEY (`id`)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- CREATE TABLE `books` (
---   `id` int NOT NULL AUTO_INCREMENT,
---   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
---   `author_id` int,
---   PRIMARY KEY (`id`)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `accounts` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
@@ -65,5 +36,6 @@ CREATE TABLE `exchange_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- +migrate Down
--- DROP TABLE books;
--- DROP TABLE authors;
+DROP TABLE accounts;
+DROP TABLE transactions;
+DROP TABLE exchange_requests;

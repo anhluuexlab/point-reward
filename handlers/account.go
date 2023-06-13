@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zett-8/go-clean-echo/logger"
 	"github.com/zett-8/go-clean-echo/models"
+	"github.com/zett-8/go-clean-echo/security"
 	"github.com/zett-8/go-clean-echo/services"
 	"github.com/zett-8/go-clean-echo/utils"
 	"go.uber.org/zap"
@@ -18,6 +19,7 @@ type (
 		GivePoint(c echo.Context) error
 		RejectPoint(c echo.Context) error
 		ExchangeRequest(c echo.Context) error
+		GetToken(c echo.Context) error
 	}
 
 	accountHandler struct {
@@ -294,5 +296,21 @@ func (h *accountHandler) ExchangeRequest(c echo.Context) error {
 		StatusCode: http.StatusOK,
 		Message:    "Xử lý thành công",
 		Data:       nil,
+	})
+}
+
+func (h *accountHandler) GetToken(c echo.Context) error {
+	token, err := security.GenToken()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, models.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Data:       nil,
+		})
+	}
+	return c.JSON(http.StatusOK, models.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Xử lý thành công",
+		Data:       token,
 	})
 }

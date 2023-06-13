@@ -7,6 +7,7 @@ import (
 	_ "github.com/zett-8/go-clean-echo/docs"
 	"github.com/zett-8/go-clean-echo/handlers"
 	"github.com/zett-8/go-clean-echo/logger"
+	"github.com/zett-8/go-clean-echo/middlewares"
 	"github.com/zett-8/go-clean-echo/services"
 	"github.com/zett-8/go-clean-echo/stores"
 	"github.com/zett-8/go-clean-echo/utils"
@@ -33,14 +34,10 @@ func main() {
 	ss := services.New(s)
 	h := handlers.New(ss)
 
-	// jwtCheck, err := middlewares.JwtMiddleware()
-	// if err != nil {
-	// 	logger.Fatal("failed to set JWT middleware", zap.Error(err))
-	// }
+	jwtCheck := middlewares.JwtMiddleware()
 
 	handlers.SetDefault(e)
-	// handlers.SetApi(e, h, jwtCheck)
-	handlers.SetApi(e, h)
+	handlers.SetApi(e, h, jwtCheck)
 
 	logger.Fatal("failed to start server", zap.Error(e.Start(":8080")))
 }

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/auth0/go-jwt-middleware/v2 v2.0.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.14.1

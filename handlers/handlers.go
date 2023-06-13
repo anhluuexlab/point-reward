@@ -32,10 +32,10 @@ func SetDefault(e *echo.Echo) {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 }
 
-// func SetApi(e *echo.Echo, h *Handlers, m echo.MiddlewareFunc) {
-func SetApi(e *echo.Echo, h *Handlers) {
+func SetApi(e *echo.Echo, h *Handlers, m echo.MiddlewareFunc) {
+	e.GET("/token", h.AccountHandler.GetToken)
 	g := e.Group("/v1")
-	// g.Use(m)
+	g.Use(m)
 	g.POST("/exchange_request", h.AccountHandler.ExchangeRequest)
 
 	users := g.Group("/users/:user_id")

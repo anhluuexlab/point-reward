@@ -6,25 +6,9 @@ services:
       context: .
       target: base
       args:
-        PORT: 8888
+        PORT: 8080
     command: "air"
     ports:
-      - "8888:8888"
+      - "8080:8080"
     volumes:
       - .:/go/app/base
-    depends_on:
-     - echo-db
-
-  echo-db:
-    container_name: "echo-db"
-    image: postgres:14
-    restart: always
-    tty: true
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./postgres:/data/echo-postgres
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres

@@ -11,7 +11,7 @@ type Transaction struct {
 	ReceiverID int        `gorm:"column:receiver_id"  json:"-"`
 	Receiver   Account    `gorm:"column:receiver_id"  json:"receiver"`
 	OperatorID int        `gorm:"column:operator_id"  json:"-"`
-	Operator   *Account   `gorm:"column:operator_id"  json:"operator"`
+	Operator   *Account   `gorm:"column:operator_id"  json:"operator,omitempty"`
 	CreatedAt  *time.Time `gorm:"column:created_at"  json:"-"`
 	UpdatedAt  *time.Time `gorm:"column:updated_at"  json:"-"`
 }
